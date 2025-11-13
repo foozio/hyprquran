@@ -36,6 +36,17 @@ pub fn load_surah_text_fatiha() -> Result<SurahTextFile> {
 }
 
 pub fn load_surah_text(id: u16) -> Result<SurahTextFile> {
+    #[cfg(feature = "sqlite")]
+    {
+        use crate::db;
+        let conn = db::open()?;
+        let _ = db::init_schema(&conn);
+        if let Some((name_ar, name_en)) = db::get_surah(&conn, id)? {
+            let ay = db::get_ayat(&conn, id)?;
+            let ayat: Vec<String> = ay.into_iter().map(|(_, t)| t).collect();
+            return Ok(SurahTextFile { surah: id, name_ar, name_en, ayat });
+        }
+    }
     let fname = if id == 1 { "fatiha.json".to_string() } else { format!("{}.json", id) };
     let path = assets_dir().join("quran").join(fname);
     let s = fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
@@ -44,6 +55,19 @@ pub fn load_surah_text(id: u16) -> Result<SurahTextFile> {
 }
 
 pub fn load_translation(lang: &str, surah: u16) -> Result<TranslationFile> {
+    #[cfg(feature = "sqlite")]
+    {
+        use crate::db;
+        let conn = db::open()?;
+        let _ = db::init_schema(&conn);
+        let mut entries = Vec::new();
+        for (ayah_number, _) in db::get_ayat(&conn, surah)? {
+            if let Some(text) = db::get_translation_for_ayah(&conn, surah, ayah_number, lang)? {
+                entries.push(TranslationEntry { surah, ayah: ayah_number, text });
+            }
+        }
+        return Ok(TranslationFile { lang: lang.to_string(), entries });
+    }
     let fname = match (lang, surah) {
         ("en", 1) => "en_fatiha.json",
         ("id", 1) => "id_fatiha.json",

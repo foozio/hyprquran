@@ -1,3 +1,4 @@
+#![cfg(feature = "gui")]
 use crate::data;
 use crate::state::{AppState, AyahRef};
 use crate::storage;
@@ -297,6 +298,9 @@ fn add_shortcuts(app: &gtk::Application, state: Rc<RefCell<AppState>>, search_en
 }
 
 fn persist(st: &crate::state::AppState) {
-    let p = storage::Persisted { last: st.current.clone(), bookmarks: Vec::new(), translation_lang: st.translation_lang.clone() };
+    let mut p = storage::load().unwrap_or_default();
+    p.last = st.current.clone();
+    p.translation_lang = st.translation_lang.clone();
+    p.prefer_dark = st.prefer_dark;
     let _ = storage::save(&p);
 }

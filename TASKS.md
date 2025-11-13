@@ -13,7 +13,7 @@ This document lists the development tasks required to move HyprQur'an from its c
 
 ## P0: Critical Tasks
 
--   [ ] **Fix Bookmark Data Loss Bug**
+-   [x] **Fix Bookmark Data Loss Bug**
     -   **Description:** The current persistence logic in `src/ui.rs` wipes the bookmark list on state changes. This makes the bookmark feature unusable.
     -   **Acceptance Criteria:**
         -   Bookmarking an ayah correctly saves it to `state.json`.
