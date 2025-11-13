@@ -1,16 +1,4 @@
-# Rust
-/target/
-**/*.rs.bk
-**/*.rs.old
-**/*.rs.orig
-**/*.rs.rej
-
-# IDEs
-.idea/
-.vscode/
-
-# OS generated files
+target/
 .DS_Store
-.Trashes
-ehthumbs.db
-Thumbs.db
+**/*.swp
+/.trae/

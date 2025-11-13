@@ -35,6 +35,14 @@ pub fn load_surah_text_fatiha() -> Result<SurahTextFile> {
     Ok(v)
 }
 
+pub fn load_surah_text(id: u16) -> Result<SurahTextFile> {
+    let fname = if id == 1 { "fatiha.json".to_string() } else { format!("{}.json", id) };
+    let path = assets_dir().join("quran").join(fname);
+    let s = fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+    let v: SurahTextFile = serde_json::from_str(&s)?;
+    Ok(v)
+}
+
 pub fn load_translation(lang: &str, surah: u16) -> Result<TranslationFile> {
     let fname = match (lang, surah) {
         ("en", 1) => "en_fatiha.json",

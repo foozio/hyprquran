@@ -22,7 +22,10 @@ pub fn build_ui_with_init(app: &gtk::Application, init: Option<AyahRef>) -> Resu
 
     let header = gtk::HeaderBar::builder().title_widget(&gtk::Label::new(Some("HyprQur'an"))).build();
     let surah_combo = gtk::ComboBoxText::new();
-    surah_combo.append_text("Al-Fatiha");
+    // populate surahs
+    for s in &state.borrow().surahs {
+        surah_combo.append_text(&format!("{} — {}", s.name_en, s.name_ar));
+    }
     surah_combo.set_active(Some(0));
     let ayah_spin = gtk::SpinButton::with_range(1.0, 7.0, 1.0);
     ayah_spin.set_value(1.0);
@@ -99,10 +102,21 @@ pub fn build_ui_with_init(app: &gtk::Application, init: Option<AyahRef>) -> Resu
         }
     };
 
-    surah_combo.connect_changed(clone!(@strong state => move |c| {
-        if c.active() == Some(0) {
+    surah_combo.connect_changed(clone!(@strong state, @strong ayah_spin, @strong refresh => move |c| {
+        if let Some(idx) = c.active() {
             let mut st = state.borrow_mut();
-            st.current = AyahRef { surah_id: 1, ayah_index: st.current.ayah_index };
+            let surah = st.surahs.get(idx as usize).cloned();
+            if let Some(s) = surah {
+                st.current = AyahRef { surah_id: s.id, ayah_index: 1 };
+                ayah_spin.set_range(1.0, s.ayah_count as f64);
+                ayah_spin.set_value(1.0);
+                if let Ok(sf) = crate::data::load_surah_text(s.id) {
+                    st.set_ayat(sf.ayat);
+                } else {
+                    st.set_ayat(Vec::new());
+                }
+                refresh();
+            }
         }
     }));
 
@@ -149,7 +163,7 @@ pub fn build_ui_with_init(app: &gtk::Application, init: Option<AyahRef>) -> Resu
 
     add_shortcuts(app, state.clone(), search_entry.clone(), refresh.clone());
 
-    if let Ok(s) = data::load_surah_text_fatiha() {
+    if let Ok(s) = data::load_surah_text(1) {
         let mut st = state.borrow_mut();
         st.set_ayat(s.ayat);
     }

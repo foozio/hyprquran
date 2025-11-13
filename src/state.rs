@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use crate::surah_index::default_surahs;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct AyahRef {
@@ -29,12 +30,7 @@ pub struct AppState {
 
 impl AppState {
     pub fn new() -> Self {
-        let surahs = vec![Surah {
-            id: 1,
-            name_ar: "الفاتحة".to_string(),
-            name_en: "Al-Fatiha".to_string(),
-            ayah_count: 7,
-        }];
+        let surahs = default_surahs();
         Self {
             surahs,
             current: AyahRef { surah_id: 1, ayah_index: 1 },
