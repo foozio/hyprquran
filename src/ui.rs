@@ -198,9 +198,16 @@ pub fn build_ui_with_init(app: &gtk::Application, init: Option<AyahRef>) -> Resu
 
 fn arabic_attrs() -> AttrList {
     let attrs = AttrList::new();
-    attrs.insert(AttrString::new_family("Amiri Quran"));
+    let family = runtime_font_family();
+    attrs.insert(AttrString::new_family(&family));
     attrs.insert(AttrInt::new_size(20 * pango::SCALE));
     attrs
+}
+
+fn runtime_font_family() -> String {
+    let bundled = crate::data::assets_dir().join("fonts").join("AmiriQuran.ttf");
+    if bundled.exists() { return "Amiri Quran".to_string(); }
+    "Amiri Quran".to_string()
 }
 
 fn add_shortcuts(app: &gtk::Application, state: Rc<RefCell<AppState>>, search_entry: gtk::SearchEntry, refresh: impl Fn() + 'static) {

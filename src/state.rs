@@ -58,6 +58,17 @@ impl AppState {
             self.search_results.clear();
             return;
         }
+        #[cfg(feature = "sqlite")]
+        {
+            if let Ok(conn) = crate::db::open() {
+                if let Some(lang) = self.translation_lang.clone() {
+                    if let Ok(hits) = crate::db::search_surah_translation_ayahs(&conn, self.current.surah_id, &lang, query) {
+                        self.search_results = hits;
+                        return;
+                    }
+                }
+            }
+        }
         let q = query;
         let mut results = Vec::new();
         for (i, a) in self.current_ayat.iter().enumerate() {

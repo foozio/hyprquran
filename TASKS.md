@@ -43,20 +43,20 @@ This document lists the development tasks required to move HyprQur'an from its c
 
 ## P2: Medium-Priority Tasks
 
--   [ ] **Package Font with the Application**
+-   [x] **Package Font with the Application**
     -   **Description:** Remove the dependency on a system-installed "Amiri Quran" font by bundling the font file with the application.
     -   **Acceptance Criteria:**
         -   The font file is included in the `assets` directory.
         -   The application loads the font at runtime, ensuring correct rendering on all systems.
 
--   [ ] **Implement Basic Search Functionality**
+-   [x] **Implement Basic Search Functionality**
     -   **Description:** Add a search bar to allow users to search for text within the loaded translation.
     -   **Acceptance Criteria:**
         -   A search input field is added to the UI.
         -   Executing a search queries the SQLite database for matching ayahs.
         -   Search results are displayed to the user, with a way to navigate to the found ayah.
 
--   [ ] **Set Up CI/CD Pipeline**
+-   [x] **Set Up CI/CD Pipeline**
     -   **Description:** Create a GitHub Actions workflow for basic quality assurance and automated builds.
     -   **Acceptance Criteria:**
         -   A workflow file is created in `.github/workflows/`.

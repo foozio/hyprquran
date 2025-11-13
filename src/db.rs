@@ -121,3 +121,14 @@ pub fn get_translation_for_ayah(conn: &Connection, surah_id: u16, ayah_number: u
     .optional()
     .map_err(Into::into)
 }
+
+pub fn search_surah_translation_ayahs(conn: &Connection, surah_id: u16, language: &str, query: &str) -> Result<Vec<u16>> {
+    let ayah_prefix: i64 = (surah_id as i64) * 1000;
+    let mut stmt = conn.prepare(
+        "SELECT ta.ayah_id FROM translated_ayah ta JOIN translation t ON ta.trans_id=t.trans_id WHERE ta.ayah_id BETWEEN ? AND ? AND t.language=? AND ta.text LIKE '%' || ? || '%' ORDER BY ta.ayah_id",
+    )?;
+    let rows = stmt.query_map(params![ayah_prefix, ayah_prefix + 999, language, query], |row| Ok(row.get::<_, i64>(0)?))?;
+    let mut out = Vec::new();
+    for r in rows { let id: i64 = r?; out.push((id % 1000) as u16); }
+    Ok(out)
+}
