@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=HyprQur'an
+Exec=hyprquran
+Icon=hyprquran
+Categories=Education;Utility;
+StartupWMClass=org.hyprquran.app
