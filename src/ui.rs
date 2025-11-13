@@ -23,9 +23,17 @@ pub fn build_ui_with_init(app: &gtk::Application, init: Option<AyahRef>) -> Resu
 
     let header = gtk::HeaderBar::builder().title_widget(&gtk::Label::new(Some("HyprQur'an"))).build();
     let surah_combo = gtk::ComboBoxText::new();
-    // populate surahs
-    for s in &state.borrow().surahs {
-        surah_combo.append_text(&format!("{} — {}", s.name_en, s.name_ar));
+    #[cfg(feature = "sqlite")]
+    {
+        if let Ok(conn) = crate::db::open() {
+            if let Ok(list) = crate::db::get_surah_list(&conn) {
+                for (_, ar, en) in list { surah_combo.append_text(&format!("{} — {}", en, ar)); }
+            }
+        }
+    }
+    #[cfg(not(feature = "sqlite"))]
+    {
+        for s in &state.borrow().surahs { surah_combo.append_text(&format!("{} — {}", s.name_en, s.name_ar)); }
     }
     surah_combo.set_active(Some(0));
     let ayah_spin = gtk::SpinButton::with_range(1.0, 7.0, 1.0);

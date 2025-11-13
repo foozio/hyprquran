@@ -1,10 +1,14 @@
 use std::collections::HashMap;
 use crate::surah_index::default_surahs;
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct AyahRef {
     pub surah_id: u16,
     pub ayah_index: u16,
+}
+
+impl Default for AyahRef {
+    fn default() -> Self { Self { surah_id: 1, ayah_index: 1 } }
 }
 
 #[derive(Clone, Debug)]

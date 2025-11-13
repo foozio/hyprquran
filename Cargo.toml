@@ -31,5 +31,9 @@ optional = true
 name = "import"
 path = "src/bin/import.rs"
 
+[[bin]]
+name = "tanzil_import"
+path = "src/bin/tanzil_import.rs"
+
 [package.metadata.docs]
 default-target = "x86_64-unknown-linux-gnu"

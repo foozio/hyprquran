@@ -22,20 +22,20 @@ This document lists the development tasks required to move HyprQur'an from its c
 
 ## P1: High-Priority Tasks
 
--   [ ] **Migrate Data Storage from JSON to SQLite**
+-   [x] **Migrate Data Storage from JSON to SQLite**
     -   **Description:** The current JSON-based data loading is a prototype limitation. The application needs to use the `rusqlite` dependency to manage all Qur'anic text and translations.
     -   **Acceptance Criteria:**
         -   An SQLite database file (`quran.db`) is created and populated with data.
         -   The database schema matches the one defined in `ERD.md`.
         -   A script is created to ingest data from a source like Tanzil.net into the database.
 
--   [ ] **Implement Data Loading for All Surahs**
+-   [x] **Implement Data Loading for All Surahs**
     -   **Description:** Refactor the hardcoded data loading functions in `src/data.rs` to read from the new SQLite database.
     -   **Acceptance Criteria:**
         -   Functions exist to fetch a specific surah's text and translation from the database.
         -   The application can dynamically load and display any of the 114 surahs.
 
--   [ ] **Implement Surah Navigation UI**
+-   [x] **Implement Surah Navigation UI**
     -   **Description:** Add a UI component (e.g., a `Gtk::DropDown`) to allow users to select and navigate to any surah.
     -   **Acceptance Criteria:**
         -   The UI displays a list of all 114 surahs.
