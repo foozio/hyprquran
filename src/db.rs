@@ -132,3 +132,11 @@ pub fn search_surah_translation_ayahs(conn: &Connection, surah_id: u16, language
     for r in rows { let id: i64 = r?; out.push((id % 1000) as u16); }
     Ok(out)
 }
+
+pub fn get_available_translations(conn: &Connection) -> Result<Vec<(String, String)>> {
+    let mut stmt = conn.prepare("SELECT language, name FROM translation ORDER BY language")?;
+    let rows = stmt.query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?;
+    let mut out = Vec::new();
+    for r in rows { out.push(r?); }
+    Ok(out)
+}

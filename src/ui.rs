@@ -1,4 +1,3 @@
-#![cfg(feature = "gui")]
 use crate::data;
 use crate::state::{AppState, AyahRef};
 use crate::storage;
@@ -7,7 +6,8 @@ use gio::prelude::*;
 use glib::clone;
 use gtk4 as gtk;
 use gtk::prelude::*;
-use pango::{AttrInt, AttrList, AttrString};
+use gtk4::prelude::ActionMapExt;
+use pango::{AttrList, AttrSize, AttrString};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -42,8 +42,24 @@ pub fn build_ui_with_init(app: &gtk::Application, init: Option<AyahRef>) -> Resu
     let toggle_translation = gtk::ToggleButton::with_label("Translation");
     let dark_toggle = gtk::ToggleButton::with_label("Dark");
     let lang_combo = gtk::ComboBoxText::new();
-    lang_combo.append_text("EN");
-    lang_combo.append_text("ID");
+    
+    // Populate language combo with available translations
+    #[cfg(feature = "sqlite")]
+    {
+        if let Ok(conn) = crate::db::open() {
+            if let Ok(translations) = crate::db::get_available_translations(&conn) {
+                for (lang_code, lang_name) in translations {
+                    lang_combo.append(Some(&lang_code), &format!("{} ({})", lang_name, lang_code.to_uppercase()));
+                }
+            }
+        }
+    }
+    #[cfg(not(feature = "sqlite"))]
+    {
+        lang_combo.append(Some("en"), "EN");
+        lang_combo.append(Some("id"), "ID");
+    }
+    
     lang_combo.set_active(Some(0));
     header.pack_start(&surah_combo);
     header.pack_start(&ayah_spin);
@@ -145,11 +161,7 @@ pub fn build_ui_with_init(app: &gtk::Application, init: Option<AyahRef>) -> Resu
 
     lang_combo.connect_changed(clone!(@strong state, @strong toggle_translation, @strong refresh => move |c| {
         let mut st = state.borrow_mut();
-        let lang = match c.active_text().map(|s| s.to_string()) {
-            Some(s) if s == "EN" => Some("en".to_string()),
-            Some(s) if s == "ID" => Some("id".to_string()),
-            _ => None,
-        };
+        let lang = c.active_id().map(|id| id.to_string());
         st.translation_lang = if toggle_translation.is_active() { lang } else { None };
         persist(&st);
         refresh();
@@ -170,7 +182,7 @@ pub fn build_ui_with_init(app: &gtk::Application, init: Option<AyahRef>) -> Resu
         persist(&st);
     }));
 
-    add_shortcuts(app, state.clone(), search_entry.clone(), refresh.clone());
+    add_shortcuts(app, state.clone(), search_entry.clone(), refresh.clone(), list.as_ref());
 
     if let Ok(s) = data::load_surah_text(1) {
         let mut st = state.borrow_mut();
@@ -183,7 +195,11 @@ pub fn build_ui_with_init(app: &gtk::Application, init: Option<AyahRef>) -> Resu
         st.prefer_dark = p.prefer_dark;
         if let Some(settings) = gtk::Settings::default() { settings.set_gtk_application_prefer_dark_theme(st.prefer_dark); }
         dark_toggle.set_active(st.prefer_dark);
-        if let Some(lang) = &st.translation_lang { toggle_translation.set_active(true); if lang == "id" { lang_combo.set_active(Some(1)); } else { lang_combo.set_active(Some(0)); } };
+        if let Some(lang) = &st.translation_lang { 
+            toggle_translation.set_active(true); 
+            // Set the active ID in the combo box
+            lang_combo.set_active_id(Some(lang));
+        };
         ayah_spin.set_value(st.current.ayah_index as f64);
     }
     if let Some(i) = init {
@@ -200,7 +216,7 @@ fn arabic_attrs() -> AttrList {
     let attrs = AttrList::new();
     let family = runtime_font_family();
     attrs.insert(AttrString::new_family(&family));
-    attrs.insert(AttrInt::new_size(20 * pango::SCALE));
+    attrs.insert(AttrSize::new_size_absolute(20 * pango::SCALE));
     attrs
 }
 
@@ -210,7 +226,7 @@ fn runtime_font_family() -> String {
     "Amiri Quran".to_string()
 }
 
-fn add_shortcuts(app: &gtk::Application, state: Rc<RefCell<AppState>>, search_entry: gtk::SearchEntry, refresh: impl Fn() + 'static) {
+fn add_shortcuts(app: &gtk::Application, state: Rc<RefCell<AppState>>, search_entry: gtk::SearchEntry, refresh: impl Fn() + 'static + Clone, list: &gtk::ListBox) {
     let next_ayah = gio::SimpleAction::new("next-ayah", None);
     next_ayah.connect_activate(clone!(@strong state, @strong refresh => move |_, _| {
         let mut st = state.borrow_mut();
@@ -248,7 +264,7 @@ fn add_shortcuts(app: &gtk::Application, state: Rc<RefCell<AppState>>, search_en
     app.add_action(&focus_search);
     app.set_accels_for_action("app.focus-search", &["<Control>F"]);
 
-    let next_result = gio::SimpleAction::new("next-result", None);
+    let next_result = gtk4::gio::SimpleAction::new("next-result", None);
     next_result.connect_activate(clone!(@strong state, @strong refresh => move |_, _| {
         let mut st = state.borrow_mut();
         if let Some(&i) = st.search_results.iter().find(|&&i| i > st.current.ayah_index) {
@@ -298,18 +314,19 @@ fn add_shortcuts(app: &gtk::Application, state: Rc<RefCell<AppState>>, search_en
     list.connect_row_activated(clone!(@strong state, @strong refresh => move |_, row| {
         if let Some(child) = row.child() {
             if let Ok(lbl) = child.downcast::<gtk::Label>() {
-                if let Some(text) = lbl.text() {
-                    let parts: Vec<_> = text.split(':').collect();
-                    if parts.len() == 2 { if let (Ok(s), Ok(a)) = (parts[0].parse::<u16>(), parts[1].parse::<u16>()) {
-                        let mut st = state.borrow_mut();
-                        st.current = AyahRef { surah_id: s, ayah_index: a };
-                        persist(&st);
-                        refresh();
-                    }}
-                }
+                let text = lbl.text();
+                let parts: Vec<_> = text.split(':').collect();
+                if parts.len() == 2 { if let (Ok(s), Ok(a)) = (parts[0].parse::<u16>(), parts[1].parse::<u16>()) {
+                    let mut st = state.borrow_mut();
+                    st.current = AyahRef { surah_id: s, ayah_index: a };
+                    persist(&st);
+                    refresh();
+                }}
             }
         }
+
     }));
+
 }
 
 fn persist(st: &crate::state::AppState) {

@@ -65,7 +65,7 @@ This document lists the development tasks required to move HyprQur'an from its c
 
 ## P3: Low-Priority Tasks
 
--   [ ] **Add Support for Multiple Translations**
+-   [x] **Add Support for Multiple Translations**
     -   **Description:** Allow users to switch between different translations.
     -   **Acceptance Criteria:**
         -   The SQLite database is populated with at least one additional translation.

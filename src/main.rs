@@ -1,15 +1,9 @@
-mod app;
-mod ui;
-mod data;
-mod state;
-mod logging;
-
 use anyhow::Result;
 use std::env;
-use state::AyahRef;
+use hyprquran::state::AyahRef;
 
 fn main() -> Result<()> {
-    logging::init();
+    hyprquran::logging::init();
     let mut surah: Option<u16> = None;
     let mut ayah: Option<u16> = None;
     let mut args = env::args().skip(1).peekable();
@@ -28,5 +22,14 @@ fn main() -> Result<()> {
         (Some(s), Some(a)) => Some(AyahRef { surah_id: s, ayah_index: a }),
         _ => None,
     };
-    app::run(init)
+    
+    #[cfg(feature = "gui")]
+    {
+        hyprquran::app::run(init)
+    }
+    #[cfg(not(feature = "gui"))]
+    {
+        println!("GUI feature is not enabled. Please compile with --features gui");
+        Ok(())
+    }
 }

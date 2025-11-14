@@ -1,4 +1,3 @@
-#![cfg(feature = "gui")]
 use anyhow::Result;
 use gtk4 as gtk;
 use gtk::prelude::*;

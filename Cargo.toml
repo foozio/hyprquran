@@ -11,9 +11,9 @@ gui = ["gtk4", "glib", "gio", "pango"]
 
 [dependencies]
 gtk4 = { version = "0.7", optional = true }
-glib = { version = "0.17", optional = true }
-gio = { version = "0.17", optional = true }
-pango = { version = "0.17", optional = true }
+glib = { version = "0.18", optional = true }
+gio = { version = "0.18", optional = true }
+pango = { version = "0.18", optional = true }
 anyhow = "1"
 thiserror = "1"
 serde = { version = "1", features = ["derive"] }
@@ -30,10 +30,12 @@ optional = true
 [[bin]]
 name = "import"
 path = "src/bin/import.rs"
+required-features = ["sqlite"]
 
 [[bin]]
 name = "tanzil_import"
 path = "src/bin/tanzil_import.rs"
+required-features = ["sqlite"]
 
 [package.metadata.docs]
 default-target = "x86_64-unknown-linux-gnu"

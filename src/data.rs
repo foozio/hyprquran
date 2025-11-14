@@ -68,13 +68,30 @@ pub fn load_translation(lang: &str, surah: u16) -> Result<TranslationFile> {
         }
         return Ok(TranslationFile { lang: lang.to_string(), entries });
     }
-    let fname = match (lang, surah) {
-        ("en", 1) => "en_fatiha.json",
-        ("id", 1) => "id_fatiha.json",
-        _ => return Err(anyhow::anyhow!("missing sample translation")),
-    };
-    let path = assets_dir().join("translations").join(fname);
-    let s = fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
-    let v: TranslationFile = serde_json::from_str(&s)?;
-    Ok(v)
+    #[cfg(not(feature = "sqlite"))]
+    {
+        let fname = match (lang, surah) {
+            ("en", 1) => "en_fatiha.json",
+            ("id", 1) => "id_fatiha.json",
+            _ => return Err(anyhow::anyhow!("missing sample translation")),
+        };
+        let path = assets_dir().join("translations").join(fname);
+        let s = fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+        let v: TranslationFile = serde_json::from_str(&s)?;
+        Ok(v)
+    }
+}
+
+#[cfg(feature = "sqlite")]
+pub fn get_available_translations() -> Result<Vec<(String, String)>> {
+    use crate::db;
+    let conn = db::open()?;
+    let _ = db::init_schema(&conn);
+    db::get_available_translations(&conn)
+}
+
+#[cfg(not(feature = "sqlite"))]
+pub fn get_available_translations() -> Result<Vec<(String, String)>> {
+    // For non-SQLite builds, we only have the sample translations
+    Ok(vec![("en".to_string(), "Sample EN".to_string()), ("id".to_string(), "Sample ID".to_string())])
 }
