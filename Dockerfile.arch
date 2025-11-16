@@ -1,0 +1,7 @@
+FROM archlinux:latest
+RUN pacman -Sy --noconfirm archlinux-keyring && pacman -Syu --noconfirm && pacman -S --noconfirm base-devel git gtk4 pango glib2 gdk-pixbuf2 cairo graphene sqlite rust cargo pkgconf fakeroot
+RUN useradd -m builder && echo 'builder ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+USER builder
+WORKDIR /workspace
+ENV CARGO_HOME=/home/builder/.cargo
+CMD ["bash"]

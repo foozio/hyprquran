@@ -1,0 +1,16 @@
+version: "3.8"
+services:
+  builder:
+    build: .
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    command: bash -lc "sleep infinity"
+  arch_builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.arch
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    command: bash -lc "sleep infinity"

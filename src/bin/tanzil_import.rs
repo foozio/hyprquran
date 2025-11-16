@@ -79,6 +79,14 @@ fn main() -> Result<()> {
                     "INSERT INTO translated_ayah(ayah_id,trans_id,text) VALUES(?,?,?) ON CONFLICT(ayah_id,trans_id) DO UPDATE SET text=excluded.text",
                     params![ayah_id, trans_id, t],
                 )?;
+                conn.execute(
+                    "DELETE FROM translation_fts WHERE ayah_id=? AND language=?",
+                    params![ayah_id, &lang],
+                )?;
+                conn.execute(
+                    "INSERT INTO translation_fts(text,ayah_id,language) VALUES(?,?,?)",
+                    params![t, ayah_id, &lang],
+                )?;
             }
         }
     }

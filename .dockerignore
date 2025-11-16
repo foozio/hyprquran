@@ -1,0 +1,7 @@
+target/
+.git/
+.trae/
+hyprquran/
+**/*.swp
+pkg/
+src/

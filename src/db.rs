@@ -43,6 +43,12 @@ pub fn init_schema(conn: &Connection) -> Result<()> {
             text TEXT NOT NULL,
             PRIMARY KEY(ayah_id, trans_id)
         );
+        CREATE VIRTUAL TABLE IF NOT EXISTS translation_fts USING fts5(
+            text,
+            ayah_id UNINDEXED,
+            language UNINDEXED,
+            tokenize='unicode61'
+        );
         "#,
     )?;
     Ok(())
@@ -81,6 +87,19 @@ pub fn upsert_translated_ayah(conn: &Connection, ayah_id: i64, trans_id: i64, te
         "INSERT INTO translated_ayah(ayah_id,trans_id,text) VALUES(?,?,?) \
          ON CONFLICT(ayah_id,trans_id) DO UPDATE SET text=excluded.text",
         params![ayah_id, trans_id, text],
+    )?;
+    let lang: String = conn.query_row(
+        "SELECT language FROM translation WHERE trans_id=?",
+        params![trans_id],
+        |row| row.get(0),
+    )?;
+    conn.execute(
+        "DELETE FROM translation_fts WHERE ayah_id=? AND language=?",
+        params![ayah_id, &lang],
+    )?;
+    conn.execute(
+        "INSERT INTO translation_fts(text,ayah_id,language) VALUES(?,?,?)",
+        params![text, ayah_id, &lang],
     )?;
     Ok(())
 }
@@ -124,6 +143,16 @@ pub fn get_translation_for_ayah(conn: &Connection, surah_id: u16, ayah_number: u
 
 pub fn search_surah_translation_ayahs(conn: &Connection, surah_id: u16, language: &str, query: &str) -> Result<Vec<u16>> {
     let ayah_prefix: i64 = (surah_id as i64) * 1000;
+    // Try FTS5 first
+    if let Ok(mut stmt) = conn.prepare(
+        "SELECT ayah_id FROM translation_fts WHERE language=? AND ayah_id BETWEEN ? AND ? AND translation_fts MATCH ? ORDER BY ayah_id",
+    ) {
+        let rows = stmt.query_map(params![language, ayah_prefix, ayah_prefix + 999, query], |row| Ok(row.get::<_, i64>(0)?))?;
+        let mut out = Vec::new();
+        for r in rows { let id: i64 = r?; out.push((id % 1000) as u16); }
+        if !out.is_empty() { return Ok(out); }
+    }
+    // Fallback to LIKE
     let mut stmt = conn.prepare(
         "SELECT ta.ayah_id FROM translated_ayah ta JOIN translation t ON ta.trans_id=t.trans_id WHERE ta.ayah_id BETWEEN ? AND ? AND t.language=? AND ta.text LIKE '%' || ? || '%' ORDER BY ta.ayah_id",
     )?;
