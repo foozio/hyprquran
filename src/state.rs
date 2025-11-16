@@ -30,6 +30,7 @@ pub struct AppState {
     pub search_results: Vec<u16>,
     pub bookmarks: Vec<AyahRef>,
     pub prefer_dark: bool,
+    pub font_size: i32,
 }
 
 impl AppState {
@@ -45,6 +46,7 @@ impl AppState {
             search_results: Vec::new(),
             bookmarks: Vec::new(),
             prefer_dark: false,
+            font_size: 20,
         }
     }
 

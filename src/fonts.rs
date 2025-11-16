@@ -1,7 +1,7 @@
 use anyhow::Result;
 use directories::ProjectDirs;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 fn bundled_fonts_dir() -> PathBuf {
     crate::data::assets_dir().join("fonts")

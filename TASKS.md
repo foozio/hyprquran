@@ -71,12 +71,12 @@ This document lists the development tasks required to move HyprQur'an from its c
         -   The SQLite database is populated with at least one additional translation.
         -   A UI element (e.g., a dropdown in a settings menu) allows the user to select the active translation.
 
--   [ ] **Improve Error Handling**
+-   [x] **Improve Error Handling**
     -   **Description:** Provide more graceful error handling for situations like a missing database file or corrupt configuration.
     -   **Acceptance Criteria:**
         -   The application displays a user-friendly error dialog instead of panicking if the database cannot be loaded.
 
--   [ ] **Refine UI/UX**
+-   [x] **Refine UI/UX**
     -   **Description:** General improvements to the user interface, such as better spacing, iconography, or adding a dedicated settings window.
     -   **Acceptance Criteria:**
         -   The UI feels more polished and intuitive.

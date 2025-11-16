@@ -11,6 +11,7 @@ pub struct Persisted {
     pub bookmarks: Vec<AyahRef>,
     pub translation_lang: Option<String>,
     pub prefer_dark: bool,
+    pub font_size: i32,
 }
 
 fn data_dir() -> Result<PathBuf> {

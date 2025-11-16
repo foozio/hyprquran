@@ -79,7 +79,15 @@ pub fn build_ui_with_init(app: &gtk::Application, init: Option<AyahRef>) -> Resu
     translation_label.set_xalign(0.0);
     arabic_label.set_direction(gtk::TextDirection::Rtl);
     translation_label.set_direction(gtk::TextDirection::Ltr);
-    let attrs = arabic_attrs();
+    arabic_label.set_margin_top(12);
+    arabic_label.set_margin_bottom(12);
+    arabic_label.set_margin_start(12);
+    arabic_label.set_margin_end(12);
+    translation_label.set_margin_top(8);
+    translation_label.set_margin_bottom(12);
+    translation_label.set_margin_start(12);
+    translation_label.set_margin_end(12);
+    let attrs = arabic_attrs(20);
     arabic_label.set_attributes(Some(&attrs));
     arabic_area.set_child(Some(&arabic_label));
     translation_area.set_child(Some(&translation_label));
@@ -109,6 +117,7 @@ pub fn build_ui_with_init(app: &gtk::Application, init: Option<AyahRef>) -> Resu
                 let idx = (st.current.ayah_index.max(1) as usize).min(st.current_ayat.len());
                 let arabic = st.current_ayat[idx - 1].clone();
                 arabic_label.set_text(&arabic);
+                arabic_label.set_attributes(Some(&arabic_attrs(st.font_size)));
             }
             if let Some(lang) = st.translation_lang.clone() {
                 if let Ok(tf) = data::load_translation(&lang, st.current.surah_id) {
@@ -212,11 +221,30 @@ pub fn build_ui_with_init(app: &gtk::Application, init: Option<AyahRef>) -> Resu
     Ok(())
 }
 
-fn arabic_attrs() -> AttrList {
+pub fn show_error(app: &gtk::Application, msg: String) -> Result<()> {
+    let win = gtk::ApplicationWindow::builder()
+        .application(app)
+        .title("HyprQur'an Error")
+        .default_width(480)
+        .default_height(180)
+        .build();
+    let boxv = gtk::Box::new(gtk::Orientation::Vertical, 12);
+    let lbl = gtk::Label::new(Some(&msg));
+    let btn = gtk::Button::with_label("Close");
+    boxv.append(&lbl);
+    boxv.append(&btn);
+    win.set_child(Some(&boxv));
+    let win2 = win.clone();
+    btn.connect_clicked(move |_| { win2.close(); });
+    win.present();
+    Ok(())
+}
+
+fn arabic_attrs(size: i32) -> AttrList {
     let attrs = AttrList::new();
     let family = crate::fonts::prefer_font_family();
     attrs.insert(AttrString::new_family(&family));
-    attrs.insert(AttrSize::new_size_absolute(20 * pango::SCALE));
+    attrs.insert(AttrSize::new_size_absolute(size * pango::SCALE));
     attrs
 }
 
@@ -295,6 +323,31 @@ fn add_shortcuts(app: &gtk::Application, state: Rc<RefCell<AppState>>, search_en
     app.add_action(&bookmark);
     app.set_accels_for_action("app.bookmark", &["B"]);
 
+    let settings_action = gio::SimpleAction::new("settings", None);
+    settings_action.connect_activate(clone!(@strong state, @strong refresh => move |_, _| {
+        let dlg = gtk::Dialog::builder().title("Settings").modal(true).build();
+        let content = gtk::Box::new(gtk::Orientation::Vertical, 8);
+        let font_spin = gtk::SpinButton::with_range(14.0, 48.0, 1.0);
+        {
+            let st = state.borrow();
+            font_spin.set_value(st.font_size as f64);
+        }
+        content.append(&gtk::Label::new(Some("Font size")));
+        content.append(&font_spin);
+        dlg.set_child(Some(&content));
+        font_spin.connect_value_changed(clone!(@strong state, @strong refresh => move |sp| {
+            let mut st = state.borrow_mut();
+            st.font_size = sp.value() as i32;
+            persist(&st);
+            refresh();
+        }));
+        dlg.add_button("Close", gtk::ResponseType::Close);
+        dlg.connect_response(|d, _| d.close());
+        dlg.present();
+    }));
+    app.add_action(&settings_action);
+    app.set_accels_for_action("app.settings", &["<Control>comma"]);
+
     // Load bookmarks into list
     if let Some(p) = storage::load() {
         for b in p.bookmarks {
@@ -328,5 +381,6 @@ fn persist(st: &crate::state::AppState) {
     p.last = st.current.clone();
     p.translation_lang = st.translation_lang.clone();
     p.prefer_dark = st.prefer_dark;
+    p.font_size = st.font_size;
     let _ = storage::save(&p);
 }
