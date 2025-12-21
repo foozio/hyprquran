@@ -25,6 +25,20 @@ pub struct SurahTextFile {
 }
 
 pub fn assets_dir() -> PathBuf {
+    if let Ok(env_path) = std::env::var("HYPRQURAN_ASSETS") {
+        let p = PathBuf::from(env_path);
+        if p.exists() {
+            return p;
+        }
+    }
+    let local = PathBuf::from("assets");
+    if local.exists() {
+        return local;
+    }
+    let system = PathBuf::from("/usr/share/hyprquran");
+    if system.exists() {
+        return system;
+    }
     PathBuf::from("assets")
 }
 
@@ -44,10 +58,19 @@ pub fn load_surah_text(id: u16) -> Result<SurahTextFile> {
         if let Some((name_ar, name_en)) = db::get_surah(&conn, id)? {
             let ay = db::get_ayat(&conn, id)?;
             let ayat: Vec<String> = ay.into_iter().map(|(_, t)| t).collect();
-            return Ok(SurahTextFile { surah: id, name_ar, name_en, ayat });
+            return Ok(SurahTextFile {
+                surah: id,
+                name_ar,
+                name_en,
+                ayat,
+            });
         }
     }
-    let fname = if id == 1 { "fatiha.json".to_string() } else { format!("{}.json", id) };
+    let fname = if id == 1 {
+        "fatiha.json".to_string()
+    } else {
+        format!("{}.json", id)
+    };
     let path = assets_dir().join("quran").join(fname);
     let s = fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
     let v: SurahTextFile = serde_json::from_str(&s)?;
@@ -63,10 +86,17 @@ pub fn load_translation(lang: &str, surah: u16) -> Result<TranslationFile> {
         let mut entries = Vec::new();
         for (ayah_number, _) in db::get_ayat(&conn, surah)? {
             if let Some(text) = db::get_translation_for_ayah(&conn, surah, ayah_number, lang)? {
-                entries.push(TranslationEntry { surah, ayah: ayah_number, text });
+                entries.push(TranslationEntry {
+                    surah,
+                    ayah: ayah_number,
+                    text,
+                });
             }
         }
-        return Ok(TranslationFile { lang: lang.to_string(), entries });
+        Ok(TranslationFile {
+            lang: lang.to_string(),
+            entries,
+        })
     }
     #[cfg(not(feature = "sqlite"))]
     {
@@ -93,5 +123,8 @@ pub fn get_available_translations() -> Result<Vec<(String, String)>> {
 #[cfg(not(feature = "sqlite"))]
 pub fn get_available_translations() -> Result<Vec<(String, String)>> {
     // For non-SQLite builds, we only have the sample translations
-    Ok(vec![("en".to_string(), "Sample EN".to_string()), ("id".to_string(), "Sample ID".to_string())])
+    Ok(vec![
+        ("en".to_string(), "Sample EN".to_string()),
+        ("id".to_string(), "Sample ID".to_string()),
+    ])
 }

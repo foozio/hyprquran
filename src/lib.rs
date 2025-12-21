@@ -1,15 +1,15 @@
-pub mod data;
-pub mod state;
-pub mod storage;
-pub mod logging;
-pub mod surah_index;
-pub mod fonts;
 #[cfg(feature = "gui")]
 pub mod app;
-#[cfg(feature = "gui")]
-pub mod ui;
+pub mod data;
 #[cfg(feature = "sqlite")]
 pub mod db;
+pub mod logging;
+pub mod state;
+pub mod storage;
+pub mod surah_index;
+#[cfg(feature = "gui")]
+pub mod ui;
+pub mod fonts;
 
 #[cfg(test)]
 mod tests {

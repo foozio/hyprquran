@@ -1,10 +1,10 @@
-#![cfg(feature = "sqlite")]
 use anyhow::Result;
 use directories::ProjectDirs;
 use rusqlite::{params, Connection, OptionalExtension};
 
 pub fn db_path() -> Result<std::path::PathBuf> {
-    let dirs = ProjectDirs::from("org", "hyprquran", "HyprQuran").ok_or_else(|| anyhow::anyhow!("dirs"))?;
+    let dirs = ProjectDirs::from("org", "hyprquran", "HyprQuran")
+        .ok_or_else(|| anyhow::anyhow!("dirs"))?;
     let dir = dirs.data_dir();
     std::fs::create_dir_all(dir)?;
     Ok(dir.join("quran.db"))
@@ -82,7 +82,12 @@ pub fn upsert_translation(conn: &Connection, name: &str, language: &str) -> Resu
     Ok(id)
 }
 
-pub fn upsert_translated_ayah(conn: &Connection, ayah_id: i64, trans_id: i64, text: &str) -> Result<()> {
+pub fn upsert_translated_ayah(
+    conn: &Connection,
+    ayah_id: i64,
+    trans_id: i64,
+    text: &str,
+) -> Result<()> {
     conn.execute(
         "INSERT INTO translated_ayah(ayah_id,trans_id,text) VALUES(?,?,?) \
          ON CONFLICT(ayah_id,trans_id) DO UPDATE SET text=excluded.text",
@@ -115,22 +120,38 @@ pub fn get_surah(conn: &Connection, surah_id: u16) -> Result<Option<(String, Str
 }
 
 pub fn get_surah_list(conn: &Connection) -> Result<Vec<(u16, String, String)>> {
-    let mut stmt = conn.prepare("SELECT surah_id,name_arabic,name_english FROM surah ORDER BY surah_id")?;
-    let rows = stmt.query_map([], |row| Ok((row.get::<_, i64>(0)? as u16, row.get(1)?, row.get(2)?)))?;
+    let mut stmt =
+        conn.prepare("SELECT surah_id,name_arabic,name_english FROM surah ORDER BY surah_id")?;
+    let rows = stmt.query_map([], |row| {
+        Ok((row.get::<_, i64>(0)? as u16, row.get(1)?, row.get(2)?))
+    })?;
     let mut out = Vec::new();
-    for r in rows { out.push(r?); }
+    for r in rows {
+        out.push(r?);
+    }
     Ok(out)
 }
 
 pub fn get_ayat(conn: &Connection, surah_id: u16) -> Result<Vec<(u16, String)>> {
-    let mut stmt = conn.prepare("SELECT ayah_number,text_uthmani FROM ayah WHERE surah_id=? ORDER BY ayah_number")?;
-    let rows = stmt.query_map(params![surah_id as i64], |row| Ok((row.get::<_, i64>(0)? as u16, row.get(1)?)))?;
+    let mut stmt = conn.prepare(
+        "SELECT ayah_number,text_uthmani FROM ayah WHERE surah_id=? ORDER BY ayah_number",
+    )?;
+    let rows = stmt.query_map(params![surah_id as i64], |row| {
+        Ok((row.get::<_, i64>(0)? as u16, row.get(1)?))
+    })?;
     let mut out = Vec::new();
-    for r in rows { out.push(r?); }
+    for r in rows {
+        out.push(r?);
+    }
     Ok(out)
 }
 
-pub fn get_translation_for_ayah(conn: &Connection, surah_id: u16, ayah_number: u16, language: &str) -> Result<Option<String>> {
+pub fn get_translation_for_ayah(
+    conn: &Connection,
+    surah_id: u16,
+    ayah_number: u16,
+    language: &str,
+) -> Result<Option<String>> {
     let ayah_id: i64 = (surah_id as i64) * 1000 + (ayah_number as i64);
     conn.query_row(
         "SELECT ta.text FROM translated_ayah ta JOIN translation t ON ta.trans_id=t.trans_id WHERE ta.ayah_id=? AND t.language=?",
@@ -141,7 +162,12 @@ pub fn get_translation_for_ayah(conn: &Connection, surah_id: u16, ayah_number: u
     .map_err(Into::into)
 }
 
-pub fn search_surah_translation_ayahs(conn: &Connection, surah_id: u16, language: &str, query: &str) -> Result<Vec<u16>> {
+pub fn search_surah_translation_ayahs(
+    conn: &Connection,
+    surah_id: u16,
+    language: &str,
+    query: &str,
+) -> Result<Vec<u16>> {
     let ayah_prefix: i64 = (surah_id as i64) * 1000;
     // Try FTS5 first
     if let Ok(mut stmt) = conn.prepare(
@@ -156,9 +182,15 @@ pub fn search_surah_translation_ayahs(conn: &Connection, surah_id: u16, language
     let mut stmt = conn.prepare(
         "SELECT ta.ayah_id FROM translated_ayah ta JOIN translation t ON ta.trans_id=t.trans_id WHERE ta.ayah_id BETWEEN ? AND ? AND t.language=? AND ta.text LIKE '%' || ? || '%' ORDER BY ta.ayah_id",
     )?;
-    let rows = stmt.query_map(params![ayah_prefix, ayah_prefix + 999, language, query], |row| Ok(row.get::<_, i64>(0)?))?;
+    let rows = stmt.query_map(
+        params![ayah_prefix, ayah_prefix + 999, language, query],
+        |row| row.get::<_, i64>(0),
+    )?;
     let mut out = Vec::new();
-    for r in rows { let id: i64 = r?; out.push((id % 1000) as u16); }
+    for r in rows {
+        let id: i64 = r?;
+        out.push((id % 1000) as u16);
+    }
     Ok(out)
 }
 
@@ -166,6 +198,8 @@ pub fn get_available_translations(conn: &Connection) -> Result<Vec<(String, Stri
     let mut stmt = conn.prepare("SELECT language, name FROM translation ORDER BY language")?;
     let rows = stmt.query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?;
     let mut out = Vec::new();
-    for r in rows { out.push(r?); }
+    for r in rows {
+        out.push(r?);
+    }
     Ok(out)
 }

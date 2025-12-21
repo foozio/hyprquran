@@ -1,6 +1,6 @@
 use anyhow::Result;
-use gtk4 as gtk;
 use gtk::prelude::*;
+use gtk4 as gtk;
 
 const APP_ID: &str = "org.hyprquran.app";
 

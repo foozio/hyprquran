@@ -1,14 +1,19 @@
-use std::collections::HashMap;
 use crate::surah_index::default_surahs;
+use std::collections::HashMap;
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct AyahRef {
     pub surah_id: u16,
     pub ayah_index: u16,
 }
 
 impl Default for AyahRef {
-    fn default() -> Self { Self { surah_id: 1, ayah_index: 1 } }
+    fn default() -> Self {
+        Self {
+            surah_id: 1,
+            ayah_index: 1,
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -38,7 +43,10 @@ impl AppState {
         let surahs = default_surahs();
         Self {
             surahs,
-            current: AyahRef { surah_id: 1, ayah_index: 1 },
+            current: AyahRef {
+                surah_id: 1,
+                ayah_index: 1,
+            },
             translation_lang: None,
             translations: HashMap::new(),
             current_ayat: Vec::new(),
@@ -64,7 +72,12 @@ impl AppState {
         {
             if let Ok(conn) = crate::db::open() {
                 if let Some(lang) = self.translation_lang.clone() {
-                    if let Ok(hits) = crate::db::search_surah_translation_ayahs(&conn, self.current.surah_id, &lang, query) {
+                    if let Ok(hits) = crate::db::search_surah_translation_ayahs(
+                        &conn,
+                        self.current.surah_id,
+                        &lang,
+                        query,
+                    ) {
                         self.search_results = hits;
                         return;
                     }

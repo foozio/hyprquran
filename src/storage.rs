@@ -15,7 +15,8 @@ pub struct Persisted {
 }
 
 fn data_dir() -> Result<PathBuf> {
-    let dirs = ProjectDirs::from("org", "hyprquran", "HyprQuran").ok_or_else(|| anyhow::anyhow!("dirs"))?;
+    let dirs = ProjectDirs::from("org", "hyprquran", "HyprQuran")
+        .ok_or_else(|| anyhow::anyhow!("dirs"))?;
     Ok(dirs.data_dir().to_path_buf())
 }
 
