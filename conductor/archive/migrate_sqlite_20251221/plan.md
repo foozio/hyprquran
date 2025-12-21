@@ -8,12 +8,12 @@ This plan outlines the steps to migrate to SQLite and import the full Qur'an.
 
 - [x] Task: Download and prepare full Qur'an text (Uthmani) using `download_and_convert.py`
 - [x] Task: Execute `tanzil_import` to populate the SQLite database with the full text
-- [ ] Task: Conductor - User Manual Verification 'Data Acquisition and Import' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Data Acquisition and Import' (Protocol in workflow.md) [checkpoint: 34408d0]
 
 ---
 
 ## Phase 2: Application Integration
 
-- [ ] Task: Update `Cargo.toml` to enable `sqlite` feature by default
-- [ ] Task: Verify `src/data.rs` and `src/ui.rs` correctly load data from SQLite
-- [ ] Task: Conductor - User Manual Verification 'Application Integration' (Protocol in workflow.md)
+- [x] Task: Update `Cargo.toml` to enable `sqlite` feature by default
+- [x] Task: Verify `src/data.rs` and `src/ui.rs` correctly load data from SQLite
+- [x] Task: Conductor - User Manual Verification 'Application Integration' (Protocol in workflow.md) [checkpoint: f261254]

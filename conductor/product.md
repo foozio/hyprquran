@@ -20,7 +20,6 @@ To offer a lightweight and keyboard-friendly Qur'an reader that adheres to moder
 - **Bookmarking:** A dedicated system to save and return to specific verses (Ayahs).
 
 ## High-Level Roadmap
-1. **Infrastructure Upgrade:** Migrate from static JSON files to a robust SQLite database for full Qur'an content management.
-- **Content Expansion:** Load and index all 114 Surahs.
+- **Content Expansion:** Load and index all 114 Surahs (Completed).
 - **Reliability:** Fix the bookmarking persistence bug.
 - **Packaging:** Streamline distribution for various Linux distributions (AUR, Flatpak).

@@ -1,0 +1,8 @@
+{
+  "track_id": "migrate_sqlite_20251221",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2025-12-21T12:30:00Z",
+  "updated_at": "2025-12-21T12:30:00Z",
+  "description": "Migrate to SQLite and Import Full Qur'an Data"
+}
