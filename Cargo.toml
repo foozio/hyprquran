@@ -5,7 +5,7 @@ edition = "2021"
 authors = ["Nuzli Hernawan <nuzlilatief@gmail.com>"]
 
 [features]
-default = ["gui"]
+default = ["gui", "sqlite"]
 sqlite = ["rusqlite"]
 gui = ["gtk4", "glib", "gio", "pango"]
 
