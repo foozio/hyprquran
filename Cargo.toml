@@ -37,5 +37,14 @@ name = "tanzil_import"
 path = "src/bin/tanzil_import.rs"
 required-features = ["sqlite"]
 
+[[bin]]
+name = "check_db"
+path = "src/bin/check_db.rs"
+required-features = ["sqlite"]
+
+[dev-dependencies]
+directories = "5"
+tempfile = "3.23.0"
+
 [package.metadata.docs]
 default-target = "x86_64-unknown-linux-gnu"
